@@ -54,6 +54,11 @@ public class QrScannerActivity extends Activity {
                     } else if (contents.startsWith("http://") || contents.startsWith("https://")) {
                         // If it's an http(s) URL (e.g., raw.githubusercontent or github.io), open it in-app via ModelViewerActivity
                         try {
+                            // Start CameraService to keep camera streaming while the model is previewed
+                            try {
+                                Intent svc = new Intent(this, CameraService.class);
+                                startService(svc);
+                            } catch (Exception e) { }
                             Intent i = new Intent(this, ModelViewerActivity.class);
                             i.setData(Uri.parse(contents));
                             startActivity(i);

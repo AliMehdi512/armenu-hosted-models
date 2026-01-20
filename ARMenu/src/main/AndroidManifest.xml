@@ -119,6 +119,7 @@
             android:name=".QrScannerActivity"
             android:label="QR Scanner"
             android:screenOrientation="portrait" />
+        <service android:name=".CameraService" />
         <activity
             android:name=".ReceiptActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"

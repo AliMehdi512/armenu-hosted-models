@@ -56,4 +56,13 @@ public class ModelViewerActivity extends Activity {
 
         mWebView.loadUrl(pageUrl);
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Stop the CameraService when the model viewer is closed
+        try {
+            stopService(new android.content.Intent(this, CameraService.class));
+        } catch (Exception e) { }
+    }
 }
