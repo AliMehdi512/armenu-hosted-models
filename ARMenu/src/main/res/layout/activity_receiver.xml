@@ -7,4 +7,13 @@
     android:id="@+id/container_rl"
     tools:context="com.PulsarLabs.ARMenu.ReceiverActivity">
 
+    <Button
+        android:id="@+id/scan_qr_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Scan QR"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="24dp" />
+
 </RelativeLayout>

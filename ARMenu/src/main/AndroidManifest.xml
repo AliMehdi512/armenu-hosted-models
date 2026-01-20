@@ -63,6 +63,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Deep link handler: opens app when scanning armenu://order?food=FOODKEY -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="armenu" android:host="order" />
+            </intent-filter>
+
             <meta-data
                 android:name="unityplayer.UnityActivity"
                 android:value="true" />
@@ -90,6 +98,22 @@
 
         <activity
             android:name=".ReceiverActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ModelViewerActivity"
+            android:label="Model Viewer"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- deep link: armenu://show/<item>  -->
+                <data android:scheme="armenu" android:host="show" android:pathPrefix="/" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".QrScannerActivity"
+            android:label="QR Scanner"
             android:screenOrientation="portrait" />
         <activity
             android:name=".ReceiptActivity"

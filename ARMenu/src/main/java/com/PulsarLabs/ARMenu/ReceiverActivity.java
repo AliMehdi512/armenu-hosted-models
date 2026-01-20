@@ -22,6 +22,17 @@ public class ReceiverActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_receiver);
+        // Add a Scan QR button handler (starts the in-app scanner)
+        android.view.View scanBtn = findViewById(R.id.scan_qr_button);
+        if (scanBtn != null) {
+            scanBtn.setOnClickListener(new android.view.View.OnClickListener() {
+                @Override
+                public void onClick(android.view.View v) {
+                    android.content.Intent i = new android.content.Intent(ReceiverActivity.this, QrScannerActivity.class);
+                    startActivity(i);
+                }
+            });
+        }
     }
 
     //Uses: foodName to be passed onto the following activities with context to start a new activity

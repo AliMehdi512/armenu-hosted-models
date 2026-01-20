@@ -1,0 +1,4 @@
+#Sun Jan 18 11:40:31 PKT 2026
+base.0=/home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/build/intermediates/dex/debug/mergeDexDebug/out
+path.0=classes.dex
+renamed.0=classes.dex

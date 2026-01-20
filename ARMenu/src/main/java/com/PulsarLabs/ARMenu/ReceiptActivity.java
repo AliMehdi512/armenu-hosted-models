@@ -105,6 +105,14 @@ public class ReceiptActivity extends Activity implements View.OnClickListener {
                 mMenuItem = "Banana Split";
                 break;
 
+            case "FriedChicken":
+                mReceiptFoodName.setText("Fried Chicken Sandwich");
+                mReceiptFoodPrice.setText("$6.99");
+                mReceiptTotalPrice.setText("Total $6.99");
+                mReceiptFoodImage.setBackgroundResource(R.drawable.fried_chicken_asset);
+                mMenuItem = "Fried Chicken Sandwich";
+                break;
+
             default:
                 break;
         }
