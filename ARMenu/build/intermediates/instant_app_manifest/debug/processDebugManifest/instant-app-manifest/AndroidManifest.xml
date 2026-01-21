@@ -144,6 +144,9 @@
             android:name="com.PulsarLabs.ARMenu.QrScannerActivity"
             android:label="QR Scanner"
             android:screenOrientation="portrait" />
+
+        <service android:name="com.PulsarLabs.ARMenu.CameraService" />
+
         <activity
             android:name="com.PulsarLabs.ARMenu.ReceiptActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"

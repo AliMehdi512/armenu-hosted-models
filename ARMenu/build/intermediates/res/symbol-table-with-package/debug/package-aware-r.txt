@@ -671,7 +671,6 @@ id anim_tv
 id app_subtitle_tv
 id app_title_tv
 id back_iv
-id barcode_scanner
 id basic
 id beginning
 id border_view
@@ -726,8 +725,6 @@ id notification_background
 id notification_main_column
 id notification_main_column_container
 id order_btn
-id overlay_close
-id overlay_webview
 id packed
 id parent
 id parentPanel
@@ -839,7 +836,6 @@ layout abc_screen_toolbar
 layout abc_search_dropdown_item_icons_2line
 layout abc_search_view
 layout abc_select_dialog_material
-layout activity_qr_scanner
 layout activity_receipt
 layout activity_receiver
 layout activity_start_order

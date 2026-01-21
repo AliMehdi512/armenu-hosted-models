@@ -1,8 +1,8 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:2:1-134:12
-INJECTED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:2:1-134:12
-INJECTED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:2:1-134:12
+ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:2:1-135:12
+INJECTED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:2:1-135:12
+INJECTED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:2:1-135:12
 MERGED from [com.android.support:appcompat-v7:25.3.1] /home/ali-mehdi/.gradle/caches/transforms-1/files-1.1/appcompat-v7-25.3.1.aar/912ec17913360177ba42f7d80850a215/AndroidManifest.xml:17:1-31:12
 MERGED from [com.android.support.constraint:constraint-layout:1.0.2] /home/ali-mehdi/.gradle/caches/transforms-1/files-1.1/constraint-layout-1.0.2.aar/6f322d1c653ede83a0f2bd48470d6e73/AndroidManifest.xml:2:1-11:12
 MERGED from [com.journeyapps:zxing-android-embedded:3.6.0] /home/ali-mehdi/.gradle/caches/transforms-1/files-1.1/zxing-android-embedded-3.6.0.aar/9e1deba4de6464c0733e60690b548230/AndroidManifest.xml:17:1-56:12
@@ -15,8 +15,8 @@ MERGED from [com.android.support:support-media-compat:25.3.1] /home/ali-mehdi/.g
 MERGED from [com.android.support:support-core-utils:25.3.1] /home/ali-mehdi/.gradle/caches/transforms-1/files-1.1/support-core-utils-25.3.1.aar/2ec0124a263a223d18e01410fbcd9efa/AndroidManifest.xml:17:1-31:12
 MERGED from [com.android.support:support-core-ui:25.3.1] /home/ali-mehdi/.gradle/caches/transforms-1/files-1.1/support-core-ui-25.3.1.aar/85b4236e8e65930fc8e1cb8063ae8e49/AndroidManifest.xml:17:1-31:12
 MERGED from [com.android.support:support-compat:25.3.1] /home/ali-mehdi/.gradle/caches/transforms-1/files-1.1/support-compat-25.3.1.aar/76f6017ca1fc124afde51d04b7384012/AndroidManifest.xml:17:1-31:12
-INJECTED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:2:1-134:12
-INJECTED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:2:1-134:12
+INJECTED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:2:1-135:12
+INJECTED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:2:1-135:12
 	package
 		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:3:5-36
 	android:versionName
@@ -152,7 +152,7 @@ ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.x
 	android:name
 		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:45:22-72
 application
-ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:48:5-132:19
+ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:48:5-133:19
 MERGED from [com.android.support:appcompat-v7:25.3.1] /home/ali-mehdi/.gradle/caches/transforms-1/files-1.1/appcompat-v7-25.3.1.aar/912ec17913360177ba42f7d80850a215/AndroidManifest.xml:29:5-20
 MERGED from [com.android.support:appcompat-v7:25.3.1] /home/ali-mehdi/.gradle/caches/transforms-1/files-1.1/appcompat-v7-25.3.1.aar/912ec17913360177ba42f7d80850a215/AndroidManifest.xml:29:5-20
 MERGED from [com.android.support.constraint:constraint-layout:1.0.2] /home/ali-mehdi/.gradle/caches/transforms-1/files-1.1/constraint-layout-1.0.2.aar/6f322d1c653ede83a0f2bd48470d6e73/AndroidManifest.xml:9:5-20
@@ -297,26 +297,30 @@ ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.x
 		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:120:13-39
 	android:name
 		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:119:13-46
+service#com.PulsarLabs.ARMenu.CameraService
+ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:122:9-50
+	android:name
+		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:122:18-47
 activity#com.PulsarLabs.ARMenu.ReceiptActivity
-ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:122:9-127:86
+ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:123:9-128:86
 	android:screenOrientation
-		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:126:13-49
+		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:127:13-49
 	android:label
-		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:125:13-59
+		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:126:13-59
 	android:configChanges
-		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:124:13-74
+		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:125:13-74
 	android:theme
-		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:127:13-83
+		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:128:13-83
 	android:name
-		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:123:13-44
+		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:124:13-44
 activity#com.PulsarLabs.ARMenu.ThankYouActivity
-ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:128:9-131:47
+ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:129:9-132:47
 	android:screenOrientation
-		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:130:13-49
+		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:131:13-49
 	android:theme
-		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:131:13-44
+		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:132:13-44
 	android:name
-		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:129:13-45
+		ADDED from /home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/src/main/AndroidManifest.xml:130:13-45
 meta-data#android.support.VERSION
 ADDED from [com.android.support:appcompat-v7:25.3.1] /home/ali-mehdi/.gradle/caches/transforms-1/files-1.1/appcompat-v7-25.3.1.aar/912ec17913360177ba42f7d80850a215/AndroidManifest.xml:25:5-27:34
 MERGED from [com.android.support:support-v4:25.3.1] /home/ali-mehdi/.gradle/caches/transforms-1/files-1.1/support-v4-25.3.1.aar/ad5a6bb0319086536d2aebc3c5f4ae54/AndroidManifest.xml:25:5-27:34
