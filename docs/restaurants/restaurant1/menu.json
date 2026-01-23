@@ -2,10 +2,16 @@
   "restaurantName": "Restaurant 1",
   "products": [
     {
-      "id": "fried_chicken",
-      "name": "Fried Chicken Sandwich",
-      "model": "fried_chicken.glb",
-      "thumbnail": "fried_chicken_thumb.png"
+      "id": "zinger_burger",
+      "name": "Zinger Burger",
+      "model": "zinger_burger.glb",
+      "thumbnail": "zinger_burger_thumb.png"
+    },
+    {
+      "id": "fajita_pizza",
+      "name": "Fajita Pizza",
+      "model": "fajita_pizza.glb",
+      "thumbnail": "fajita_pizza_thumb.png"
     }
   ]
 }
