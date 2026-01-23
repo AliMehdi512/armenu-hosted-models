@@ -1,0 +1,11 @@
+{
+  "restaurantName": "Restaurant 2",
+  "products": [
+    {
+      "id": "sample_burger",
+      "name": "Sample Burger",
+      "model": "sample_burger.glb",
+      "thumbnail": "sample_burger_thumb.png"
+    }
+  ]
+}
