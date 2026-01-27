@@ -12,6 +12,12 @@
       "name": "Fajita Pizza",
       "model": "fajita_pizza.glb",
       "thumbnail": "fajita_pizza_thumb.png"
+    },
+    {
+      "id": "coffee",
+      "name": "Coffee",
+      "model": "coffee.glb",
+      "thumbnail": "coffee.png"
     }
   ]
 }
