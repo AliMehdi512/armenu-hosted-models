@@ -5,37 +5,122 @@
       "id": "zinger_burger",
       "name": "Zinger Burger",
       "model": "zinger_burger.glb",
-      "thumbnail": "zinger_burger_thumb.png"
+      "thumbnail": "zinger_burger_thumb.png",
+      "price": 450,
+      "currency": "RS",
+      "description": "Crispy chicken burger with lettuce and mayo",
+      "category": "Burgers",
+      "isAvailable": true
     },
     {
-      "id": "fajita_pizza",
-      "name": "Fajita Pizza",
+      "id": "fajita_pizza_small",
+      "name": "Fajita Pizza (Small)",
       "model": "fajita_pizza.glb",
-      "thumbnail": "fajita_pizza_thumb.png"
+      "thumbnail": "fajita_pizza_thumb.png",
+      "price": 400,
+      "currency": "RS",
+      "description": "Small fajita pizza with grilled chicken and peppers",
+      "category": "Pizza",
+      "isAvailable": true
+    },
+    {
+      "id": "fajita_pizza_medium",
+      "name": "Fajita Pizza (Medium)",
+      "model": "fajita_pizza.glb",
+      "thumbnail": "fajita_pizza_thumb.png",
+      "price": 800,
+      "currency": "RS",
+      "description": "Medium fajita pizza with grilled chicken and peppers",
+      "category": "Pizza",
+      "isAvailable": true
+    },
+    {
+      "id": "fajita_pizza_large",
+      "name": "Fajita Pizza (Large)",
+      "model": "fajita_pizza.glb",
+      "thumbnail": "fajita_pizza_thumb.png",
+      "price": 1200,
+      "currency": "RS",
+      "description": "Large fajita pizza with grilled chicken and peppers",
+      "category": "Pizza",
+      "isAvailable": true
     },
     {
       "id": "coffee",
       "name": "Coffee",
       "model": "coffee.glb",
-      "thumbnail": "coffee.png"
+      "thumbnail": "coffee_thumb.png",
+      "price": 150,
+      "currency": "RS",
+      "description": "Hot brewed coffee",
+      "category": "Beverages",
+      "isAvailable": true
     },
     {
       "id": "fruit_chaat",
       "name": "Fruit Chaat",
       "model": "fruit_chaat.glb",
-      "thumbnail": "fruit_chaat.png"
+      "thumbnail": "fruit_chaat_thumb.png",
+      "price": 250,
+      "currency": "RS",
+      "description": "Spiced mixed fruit chaat",
+      "category": "Snacks",
+      "isAvailable": true
     },
     {
       "id": "choco_milkshake",
       "name": "Choco Milkshake",
       "model": "choco_milkshake.glb",
-      "thumbnail": "choco_milkshake.png"
+      "thumbnail": "choco_milkshake_thumb.png",
+      "price": 300,
+      "currency": "RS",
+      "description": "Creamy chocolate milkshake",
+      "category": "Beverages",
+      "isAvailable": true
     },
     {
       "id": "shaami_burger",
       "name": "Shaami Burger",
       "model": "shaami_burger.glb",
-      "thumbnail": "shaami_burger.png"
+      "thumbnail": "shaami_burger_thumb.png",
+      "price": 200,
+      "currency": "RS",
+      "description": "Beef shaami patty with chutney",
+      "category": "Burgers",
+      "isAvailable": true
+    },
+    {
+      "id": "cigar",
+      "name": "Cigar",
+      "model": "cigar_3d_model.glb",
+      "thumbnail": "cigar_thumb.png",
+      "price": 250,
+      "currency": "RS",
+      "description": "Cigar 3D model (for display)",
+      "category": "Extras",
+      "isAvailable": true
+    },
+    {
+      "id": "light_support_dress",
+      "name": "Light Support Dress",
+      "model": "light_support_suports_bra.glb",
+      "thumbnail": "light_support_thumb.png",
+      "price": 6000,
+      "currency": "RS",
+      "description": "Light support dress (3D model)",
+      "category": "Apparel",
+      "isAvailable": true
+    },
+    {
+      "id": "flow_zip_up_jacket",
+      "name": "Female Flow Zip Up Jacket",
+      "model": "flow_zip_up_jacket.glb",
+      "thumbnail": "flow_zip_up_jacket_thumb.png",
+      "price": 12000,
+      "currency": "RS",
+      "description": "Female Flow Zip Up Jacket (3D model)",
+      "category": "Apparel",
+      "isAvailable": true
     }
   ]
 }

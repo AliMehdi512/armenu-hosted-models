@@ -36,6 +36,29 @@ public class QrScannerActivity extends Activity {
         integrator.initiateScan();
     }
 
+    private String normalizeRestaurantUrl(String url) {
+        try {
+            if (url.endsWith("/menu.json")) {
+                url = url.substring(0, url.length() - "/menu.json".length());
+            }
+            // Convert GitHub tree URLs to raw content URLs
+            if (url.startsWith("https://github.com/")) {
+                String[] parts = url.split("/");
+                if (parts.length > 7 && "tree".equals(parts[5])) {
+                    String owner = parts[3];
+                    String repo = parts[4];
+                    String branch = parts[6];
+                    StringBuilder rest = new StringBuilder();
+                    for (int i = 7; i < parts.length; i++) {
+                        rest.append("/").append(parts[i]);
+                    }
+                    return "https://raw.githubusercontent.com/" + owner + "/" + repo + "/" + branch + rest.toString();
+                }
+            }
+        } catch (Exception ignored) { }
+        return url;
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
@@ -52,18 +75,25 @@ public class QrScannerActivity extends Activity {
                             Toast.makeText(this, "Unable to open link", Toast.LENGTH_SHORT).show();
                         }
                     } else if (contents.startsWith("http://") || contents.startsWith("https://")) {
-                        // If it's an http(s) URL (e.g., raw.githubusercontent or github.io), open it in-app via ModelViewerActivity
                         try {
-                            // Start CameraService to keep camera streaming while the model is previewed
+                            // Start CameraService to keep camera streaming while the model/menu is previewed
                             try {
                                 Intent svc = new Intent(this, CameraService.class);
                                 startService(svc);
                             } catch (Exception e) { }
-                            Intent i = new Intent(this, ModelViewerActivity.class);
-                            i.setData(Uri.parse(contents));
-                            startActivity(i);
+
+                            if (contents.contains("/restaurants/") || contents.endsWith("/menu.json") || contents.contains("/menu.json")) {
+                                Intent i = new Intent(this, RestaurantMenuActivity.class);
+                                String normalized = normalizeRestaurantUrl(contents);
+                                i.setData(Uri.parse(normalized));
+                                startActivity(i);
+                            } else {
+                                Intent i = new Intent(this, ModelViewerActivity.class);
+                                i.setData(Uri.parse(contents));
+                                startActivity(i);
+                            }
                         } catch (Exception e) {
-                            Toast.makeText(this, "Unable to open remote model", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Unable to open remote link", Toast.LENGTH_SHORT).show();
                         }
                     } else {
                         // If it's not a supported scheme, just show the raw content
