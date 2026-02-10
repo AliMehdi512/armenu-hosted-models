@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "/home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/build/intermediates/incremental/mergeDebugResources/merged.dir/values-id/values-id.xml",
+            "outputFile": "/home/mehdi/Downloads/other projects/gh/ARMenu_clean/ARMenu/build/intermediates/incremental/mergeDebugResources/merged.dir/values-id/values-id.xml",
             "map": [
                 {
-                    "source": "/home/ali-mehdi/.gradle/caches/transforms-1/files-1.1/zxing-android-embedded-3.6.0.aar/9e1deba4de6464c0733e60690b548230/res/values-id/values-id.xml",
+                    "source": "/home/mehdi/.gradle/caches/transforms-1/files-1.1/zxing-android-embedded-3.6.0.aar/df0ae75fa441365a00d8ae8f614fd44c/res/values-id/values-id.xml",
                     "from": {
                         "startLines": "2,3,4,5",
                         "startColumns": "4,4,4,4",

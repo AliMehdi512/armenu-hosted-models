@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "/home/ali-mehdi/Downloads/gh/ARMenu/ARMenu/build/intermediates/incremental/mergeDebugResources/merged.dir/values-v11/values-v11.xml",
+            "outputFile": "/home/mehdi/Downloads/other projects/gh/ARMenu_clean/ARMenu/build/intermediates/incremental/mergeDebugResources/merged.dir/values-v11/values-v11.xml",
             "map": [
                 {
-                    "source": "/home/ali-mehdi/.gradle/caches/transforms-1/files-1.1/appcompat-v7-25.3.1.aar/912ec17913360177ba42f7d80850a215/res/values-v11/values-v11.xml",
+                    "source": "/home/mehdi/.gradle/caches/transforms-1/files-1.1/appcompat-v7-25.3.1.aar/fb22ba0e0ac0403edca414d7c5446c13/res/values-v11/values-v11.xml",
                     "from": {
                         "startLines": "2,8,14,20,26,32,38,39,43,47,48,52,56,57,61,66,71,76,78,80,81,82,136,191",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",

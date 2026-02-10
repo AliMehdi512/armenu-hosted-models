@@ -1,16 +1,9 @@
 package com.PulsarLabs.ARMenu;
 
 import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.graphics.SurfaceTexture;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.view.Gravity;
-import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -21,11 +14,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.graphics.Color;
-import android.view.TextureView;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.widget.RatingBar;
-import android.widget.Button;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -41,16 +32,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class RestaurantMenuActivity extends Activity implements TextureView.SurfaceTextureListener, QrTracker.QrTrackingListener {
+public class RestaurantMenuActivity extends Activity {
 
     private WebView mWebView;
-    private TextureView mTextureView;
-    private CameraService cameraService;
-    private boolean bound = false;
-    private Surface pendingSurface = null;
     private ModelCacheManager cacheManager;
     private CartManager cartManager;
-    // removed on-screen log view per UI update
     
     private String restaurantBaseUrl;
     private List<MenuItem> menuItems = new ArrayList<MenuItem>();
@@ -61,51 +47,13 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
     private TextView priceTextView;
     private Random random = new Random();
     private MenuItem selectedItem = null;
-    
-    // QR Tracking state
-    private boolean qrTrackingActive = false;
-    private android.os.Handler uiHandler;
-    
-    // AR mode state
-    private boolean arModeActive = false;
-    private TextView arToggleBtn;
-
-    private ServiceConnection svcConn = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            try {
-                CameraService.LocalBinder lb = (CameraService.LocalBinder) service;
-                cameraService = lb.getService();
-                bound = true;
-                if (pendingSurface != null) {
-                    cameraService.setPreviewSurface(pendingSurface);
-                } else if (mTextureView != null && mTextureView.isAvailable()) {
-                    SurfaceTexture st = mTextureView.getSurfaceTexture();
-                    if (st != null) {
-                        pendingSurface = new Surface(st);
-                        cameraService.setPreviewSurface(pendingSurface);
-                    }
-                }
-                // Enable QR tracking for AR model positioning
-                cameraService.enableQrTracking(RestaurantMenuActivity.this);
-                qrTrackingActive = true;
-            } catch (Exception e) { }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            cameraService = null;
-            bound = false;
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         cacheManager = new ModelCacheManager(this);
-        uiHandler = new android.os.Handler(getMainLooper());
-    cartManager = new CartManager(this);
+        cartManager = new CartManager(this);
 
         // Get restaurant URL from intent and normalize it
         Uri data = getIntent().getData();
@@ -115,23 +63,14 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
 
         FrameLayout root = new FrameLayout(this);
 
-    // Camera preview background
-    mTextureView = new TextureView(this);
-        FrameLayout.LayoutParams tvLp = new FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT, 
-            FrameLayout.LayoutParams.MATCH_PARENT
-        );
-        mTextureView.setLayoutParams(tvLp);
-    mTextureView.setSurfaceTextureListener(this);
-
         // WebView for 3D model
         mWebView = new WebView(this);
+        FrameLayout.LayoutParams tvLp = new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        );
         mWebView.setLayoutParams(tvLp);
-        try {
-            mWebView.setBackgroundColor(0);
-            mWebView.setBackgroundResource(android.R.color.transparent);
-            mWebView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null);
-        } catch (Exception e) { }
+        mWebView.setBackgroundColor(Color.parseColor("#1a1a2e"));
 
         WebSettings ws = mWebView.getSettings();
         ws.setJavaScriptEnabled(true);
@@ -164,9 +103,7 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
         nameLp.gravity = Gravity.TOP;
         restaurantNameView.setLayoutParams(nameLp);
 
-        // Cart manager and cart badge/icon
-        cartManager = new CartManager(this);
-        // Cart icon (replace previous eye icon with cart emoji)
+        // Cart icon
         final TextView cartIcon = new TextView(this);
         cartIcon.setText("🛒");
         cartIcon.setTextSize(22);
@@ -307,7 +244,6 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
         bottomContainer.addView(scrollView);
         bottomContainer.addView(infoOverlay);
 
-        root.addView(mTextureView);
         root.addView(mWebView);
         root.addView(restaurantNameView);
         root.addView(bottomContainer);
@@ -315,28 +251,6 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
     // Add cart UI to root so it appears above the WebView/texture
     try { root.addView(cartIcon); } catch (Exception ignored) { }
     try { root.addView(cartBadge); } catch (Exception ignored) { }
-
-        // AR toggle button
-        arToggleBtn = new TextView(this);
-        arToggleBtn.setText("📷 AR");
-        arToggleBtn.setTextSize(14);
-        arToggleBtn.setTextColor(Color.WHITE);
-        arToggleBtn.setGravity(Gravity.CENTER);
-        arToggleBtn.setBackgroundColor(Color.argb(200, 0, 150, 80));
-        arToggleBtn.setPadding(dpToPx(14), dpToPx(8), dpToPx(14), dpToPx(8));
-        FrameLayout.LayoutParams arLp = new FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT
-        );
-        arLp.gravity = Gravity.TOP | Gravity.LEFT;
-        arLp.setMargins(dpToPx(8), dpToPx(40), 0, 0);
-        arToggleBtn.setLayoutParams(arLp);
-        arToggleBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                toggleArMode();
-            }
-        });
-        root.addView(arToggleBtn);
 
         setContentView(root);
 
@@ -582,9 +496,7 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
                         @Override
                         public void run() {
                             try {
-                                // Choose viewer HTML based on AR mode
-                                String viewerPage = arModeActive ? "ar_model_viewer.html" : "model_viewer.html";
-                                String pageUrl = "file:///android_asset/" + viewerPage + "?model=" + localServeUrl;
+                                String pageUrl = "file:///android_asset/model_viewer.html?model=" + localServeUrl;
                                 InAppLogger.log("Loading URL: " + pageUrl);
                                 mWebView.clearCache(true);
                                 mWebView.loadUrl(pageUrl);
@@ -602,31 +514,6 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
                 }
             }
         }).start();
-    }
-
-    /**
-     * Toggle AR mode on/off. In AR mode the model is placed on the table
-     * surface detected via QR code tracking from the live camera feed.
-     */
-    private void toggleArMode() {
-        arModeActive = !arModeActive;
-        if (arModeActive) {
-            arToggleBtn.setText("🔲 3D");
-            arToggleBtn.setBackgroundColor(Color.argb(200, 200, 60, 30));
-            // Make camera preview visible behind model
-            mTextureView.setVisibility(View.VISIBLE);
-            // Make webview background transparent for camera passthrough
-            mWebView.setBackgroundColor(0);
-            Toast.makeText(this, "AR Mode: Point camera at QR code on table, then tap to place model", Toast.LENGTH_LONG).show();
-        } else {
-            arToggleBtn.setText("📷 AR");
-            arToggleBtn.setBackgroundColor(Color.argb(200, 0, 150, 80));
-            Toast.makeText(this, "3D Viewer Mode", Toast.LENGTH_SHORT).show();
-        }
-        // Reload current model with the correct viewer
-        if (selectedItem != null) {
-            loadProduct(selectedItem);
-        }
     }
 
     /**
@@ -741,101 +628,8 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        try {
-            if (bound) {
-                unbindService(svcConn);
-                bound = false;
-            }
-        } catch (Exception e) { }
-        try {
-            startService(new Intent(this, CameraService.class));
-            bindService(new Intent(this, CameraService.class), svcConn, Context.BIND_AUTO_CREATE);
-        } catch (Exception e) { }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (bound && cameraService != null && mTextureView != null && mTextureView.isAvailable()) {
-            try {
-                SurfaceTexture st = mTextureView.getSurfaceTexture();
-                if (st != null) {
-                    if (pendingSurface == null) {
-                        pendingSurface = new Surface(st);
-                    }
-                    cameraService.setPreviewSurface(pendingSurface);
-                }
-            } catch (Exception e) { }
-        }
-    }
-
-    @Override
     protected void onDestroy() {
-        try {
-            if (bound) {
-                try {
-                    if (cameraService != null) {
-                        cameraService.disableQrTracking();
-                        cameraService.setPreviewSurface(null);
-                    }
-                } catch (Exception e) { }
-                unbindService(svcConn);
-                bound = false;
-            }
-        } catch (Exception e) { }
-        qrTrackingActive = false;
         super.onDestroy();
-    }
-
-    @Override
-    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        try {
-            pendingSurface = new Surface(surface);
-            if (cameraService != null && bound) {
-                cameraService.setPreviewSurface(pendingSurface);
-            }
-        } catch (Exception e) { }
-    }
-
-    @Override
-    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) { }
-
-    @Override
-    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        return true;
-    }
-
-    @Override
-    public void onSurfaceTextureUpdated(SurfaceTexture surface) { }
-
-    // QrTracker.QrTrackingListener implementation
-    @Override
-    public void onQrPositionUpdated(final float centerX, final float centerY, final float size, final boolean detected) {
-        if (mWebView == null) return;
-        
-        // Pass normalized coords directly to JavaScript (0-1 range)
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    // Send raw normalized values - JS handles conversion
-                    String js = String.format(
-                        java.util.Locale.US,
-                        "if(typeof updateModelPosition==='function'){updateModelPosition(%f,%f,%f,%s);}",
-                        centerX, centerY, size, detected ? "true" : "false"
-                    );
-                    if (android.os.Build.VERSION.SDK_INT >= 19) {
-                        mWebView.evaluateJavascript(js, null);
-                    } else {
-                        mWebView.loadUrl("javascript:" + js);
-                    }
-                } catch (Exception e) {
-                    // Ignore JS errors
-                }
-            }
-        });
     }
 
     private int dpToPx(int dp) {

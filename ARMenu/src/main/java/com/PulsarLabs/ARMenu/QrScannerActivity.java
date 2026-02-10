@@ -76,12 +76,6 @@ public class QrScannerActivity extends Activity {
                         }
                     } else if (contents.startsWith("http://") || contents.startsWith("https://")) {
                         try {
-                            // Start CameraService to keep camera streaming while the model/menu is previewed
-                            try {
-                                Intent svc = new Intent(this, CameraService.class);
-                                startService(svc);
-                            } catch (Exception e) { }
-
                             if (contents.contains("/restaurants/") || contents.endsWith("/menu.json") || contents.contains("/menu.json")) {
                                 Intent i = new Intent(this, RestaurantMenuActivity.class);
                                 String normalized = normalizeRestaurantUrl(contents);
@@ -93,7 +87,8 @@ public class QrScannerActivity extends Activity {
                                 startActivity(i);
                             }
                         } catch (Exception e) {
-                            Toast.makeText(this, "Unable to open remote link", Toast.LENGTH_SHORT).show();
+                            e.printStackTrace();
+                            Toast.makeText(this, "Error: " + e.getMessage() + "\nURL: " + contents, Toast.LENGTH_LONG).show();
                         }
                     } else {
                         // If it's not a supported scheme, just show the raw content

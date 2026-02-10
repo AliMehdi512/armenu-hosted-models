@@ -637,10 +637,11 @@ int drawable notification_template_icon_bg 0x7f06006b
 int drawable notification_template_icon_low_bg 0x7f06006c
 int drawable notification_tile_bg 0x7f06006d
 int drawable notify_panel_notification_icon_bg 0x7f06006e
-int drawable plate_asset 0x7f06006f
-int drawable qr_code_asset 0x7f060070
-int drawable sushi_asset 0x7f060071
-int drawable waiter_asset 0x7f060072
+int drawable placeholder 0x7f06006f
+int drawable plate_asset 0x7f060070
+int drawable qr_code_asset 0x7f060071
+int drawable sushi_asset 0x7f060072
+int drawable waiter_asset 0x7f060073
 int id action0 0x7f070000
 int id action_bar 0x7f070001
 int id action_bar_activity_content 0x7f070002

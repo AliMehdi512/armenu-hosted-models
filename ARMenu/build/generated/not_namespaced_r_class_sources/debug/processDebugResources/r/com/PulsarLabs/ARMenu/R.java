@@ -2645,10 +2645,11 @@ public final class R {
     public static final int notification_template_icon_low_bg=0x7f06006c;
     public static final int notification_tile_bg=0x7f06006d;
     public static final int notify_panel_notification_icon_bg=0x7f06006e;
-    public static final int plate_asset=0x7f06006f;
-    public static final int qr_code_asset=0x7f060070;
-    public static final int sushi_asset=0x7f060071;
-    public static final int waiter_asset=0x7f060072;
+    public static final int placeholder=0x7f06006f;
+    public static final int plate_asset=0x7f060070;
+    public static final int qr_code_asset=0x7f060071;
+    public static final int sushi_asset=0x7f060072;
+    public static final int waiter_asset=0x7f060073;
   }
   public static final class id {
     public static final int action0=0x7f070000;
