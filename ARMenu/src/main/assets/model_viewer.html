@@ -11,12 +11,10 @@
       model-viewer::part(container) { background: transparent; }
       #model-container {
         position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 280px;
-        height: 280px;
-        margin-left: -140px;
-        margin-top: -140px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
         transition: all 0.08s ease-out;
         touch-action: none;
         transform-origin: center;
@@ -43,39 +41,14 @@
       }
 
       const container = document.getElementById('model-container');
-      let targetX = window.innerWidth / 2;
-      let targetY = window.innerHeight / 2;
-      let currentX = window.innerWidth / 2;
-      let currentY = window.innerHeight / 2;
       let scale = 1;
       let initialDistance = 0;
 
-      // Smooth animation loop - moves model toward QR position rapidly
-      setInterval(() => {
-        currentX += (targetX - currentX) * 0.15;
-        currentY += (targetY - currentY) * 0.15;
-        updateContainerPosition();
-      }, 16);
-
       function updateContainerPosition() {
-        const w = container.offsetWidth / 2;
-        const h = container.offsetHeight / 2;
-        container.style.left = (currentX - w * scale) + 'px';
-        container.style.top = (currentY - h * scale) + 'px';
         container.style.transform = `scale(${scale})`;
       }
 
-      // Receive QR position from app and move model toward it
-      window.onQrFound = function(nx, ny) {
-        try {
-          const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-          const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
-          targetX = nx * vw;
-          targetY = ny * vh;
-        } catch (e) { }
-      };
-
-      // Pinch to zoom - expand model to up to 3x scale
+      // Pinch to zoom - expand model to up to 5x scale
       document.addEventListener('touchstart', (e) => {
         if (e.touches.length === 2) {
           const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -90,7 +63,8 @@
           const dy = e.touches[0].clientY - e.touches[1].clientY;
           const distance = Math.sqrt(dx * dx + dy * dy);
           const ratio = distance / initialDistance;
-          scale = Math.max(1, Math.min(ratio, 3));
+          scale = Math.max(0.5, Math.min(ratio * scale, 5));
+          initialDistance = distance;
           updateContainerPosition();
         }
       }, { passive: true });
