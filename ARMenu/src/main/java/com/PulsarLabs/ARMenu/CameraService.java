@@ -14,7 +14,6 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 import android.media.Image;
 import android.media.ImageReader;
-import java.nio.ByteBuffer;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -24,6 +23,7 @@ import android.view.Surface;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
@@ -37,13 +37,13 @@ public class CameraService extends Service {
     private Handler backgroundHandler;
     private Surface previewSurface;
     private final IBinder binder = new LocalBinder();
-    // QR listener support
-    public interface QrListener {
-        void onQrFound(float nx, float ny, String text);
-    }
-
-    private QrListener qrListener;
-    private long lastQrTimestamp = 0;
+    
+    // QR Tracking
+    private QrTracker qrTracker;
+    private QrTracker.QrTrackingListener trackingListener;
+    private boolean qrTrackingEnabled = false;
+    private int frameSkipCounter = 0;
+    private static final int FRAME_SKIP = 3; // Process every 3rd frame to reduce CPU/heat
 
     @Override
     public void onCreate() {
@@ -73,17 +73,56 @@ public class CameraService extends Service {
 
     public void setPreviewSurface(Surface s) {
         previewSurface = s;
-        if (cameraDevice != null) {
-            recreateCaptureSession();
+        // Force restart the camera with the new surface to ensure capture session is properly set
+        resetCamera();
+    }
+
+    /**
+     * Enable QR tracking with a callback listener
+     */
+    public void enableQrTracking(QrTracker.QrTrackingListener listener) {
+        this.trackingListener = listener;
+        if (qrTracker == null) {
+            qrTracker = new QrTracker();
         }
+        qrTracker.setListener(listener);
+        qrTracker.startTracking();
+        qrTrackingEnabled = true;
     }
 
-    public void registerQrListener(QrListener l) {
-        qrListener = l;
+    /**
+     * Disable QR tracking
+     */
+    public void disableQrTracking() {
+        qrTrackingEnabled = false;
+        if (qrTracker != null) {
+            qrTracker.stopTracking();
+        }
+        trackingListener = null;
     }
 
-    public void unregisterQrListener(QrListener l) {
-        if (qrListener == l) qrListener = null;
+    /**
+     * Get the QR tracker instance
+     */
+    public QrTracker getQrTracker() {
+        return qrTracker;
+    }
+
+    public void resetCamera() {
+        // Close the current camera and reopen it with the current preview surface
+        try {
+            closeCamera();
+            // Small delay to ensure camera is fully released before reopening
+            Thread.sleep(100);
+        } catch (Exception e) { }
+        if (backgroundHandler != null) {
+            backgroundHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    openCamera();
+                }
+            });
+        }
     }
 
     @Override
@@ -127,18 +166,29 @@ public class CameraService extends Service {
             String[] ids = manager.getCameraIdList();
             if (ids.length == 0) return;
             String cameraId = ids[0];
-            imageReader = ImageReader.newInstance(320, 240, ImageFormat.YUV_420_888, 2);
+            // Increased resolution for better QR detection
+            imageReader = ImageReader.newInstance(640, 480, ImageFormat.YUV_420_888, 2);
             imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader reader) {
-                    Image img = null;
+                    Image image = null;
                     try {
-                        img = reader.acquireLatestImage();
-                        if (img == null) return;
-                        processImageForQr(img);
-                    } catch (Exception e) {
+                        image = reader.acquireNextImage();
+                        if (image != null) {
+                            // Process frame for QR tracking if enabled
+                            if (qrTrackingEnabled && qrTracker != null) {
+                                frameSkipCounter++;
+                                if (frameSkipCounter >= FRAME_SKIP) {
+                                    frameSkipCounter = 0;
+                                    qrTracker.processImage(image);
+                                }
+                            }
+                        }
+                    } catch (Exception e) { 
                     } finally {
-                        if (img != null) try { img.close(); } catch (Exception ex) { }
+                        if (image != null) {
+                            try { image.close(); } catch (Exception e) { }
+                        }
                     }
                 }
             }, backgroundHandler);
@@ -202,64 +252,6 @@ public class CameraService extends Service {
                 imageReader = null;
             }
         } catch (Exception e) { }
-    }
-
-    private void processImageForQr(Image image) {
-        long now = System.currentTimeMillis();
-        if (now - lastQrTimestamp < 120) return;
-        try {
-            Image.Plane[] planes = image.getPlanes();
-            ByteBuffer yBuf = planes[0].getBuffer();
-            ByteBuffer uBuf = planes[1].getBuffer();
-            ByteBuffer vBuf = planes[2].getBuffer();
-
-            int ySize = yBuf.remaining();
-            int uSize = uBuf.remaining();
-            int vSize = vBuf.remaining();
-
-            byte[] nv21 = new byte[ySize + uSize + vSize];
-            yBuf.get(nv21, 0, ySize);
-
-            byte[] u = new byte[uSize];
-            byte[] v = new byte[vSize];
-            uBuf.get(u);
-            vBuf.get(v);
-            for (int i = 0; i < vSize && ySize + 2 * i + 1 < nv21.length; i++) {
-                nv21[ySize + 2 * i] = v[i];
-                nv21[ySize + 2 * i + 1] = u[i];
-            }
-
-            int width = image.getWidth();
-            int height = image.getHeight();
-
-            try {
-                com.google.zxing.PlanarYUVLuminanceSource py = new com.google.zxing.PlanarYUVLuminanceSource(nv21, width, height, 0, 0, width, height, false);
-                com.google.zxing.BinaryBitmap bitmap = new com.google.zxing.BinaryBitmap(new com.google.zxing.common.HybridBinarizer(py));
-                com.google.zxing.MultiFormatReader reader = new com.google.zxing.MultiFormatReader();
-                com.google.zxing.Result result = reader.decode(bitmap);
-                if (result != null && result.getResultPoints() != null && result.getResultPoints().length > 0) {
-                    com.google.zxing.ResultPoint[] pts = result.getResultPoints();
-                    float cx = 0, cy = 0;
-                    for (com.google.zxing.ResultPoint p : pts) { cx += p.getX(); cy += p.getY(); }
-                    cx /= pts.length; cy /= pts.length;
-                    final float nx = cx / (float) width;
-                    final float ny = cy / (float) height;
-                    lastQrTimestamp = now;
-                    if (qrListener != null) {
-                        final String txt = result.getText();
-                        backgroundHandler.post(new Runnable() {
-                            @Override public void run() {
-                                try { qrListener.onQrFound(nx, ny, txt); } catch (Exception e) { }
-                            }
-                        });
-                    }
-                }
-            } catch (com.google.zxing.NotFoundException e) {
-                // no QR
-            }
-        } catch (Exception e) {
-            // ignore
-        }
     }
 
     private void recreateCaptureSession() {
