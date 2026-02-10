@@ -96,7 +96,7 @@
       "thumbnail": "Cigar.png",
       "price": 250,
       "currency": "RS",
-      "description": "Cigar 3D model (for display)",
+      "description": "Cigar 3D ",
       "category": "Extras",
       "isAvailable": true
     },
@@ -107,7 +107,7 @@
       "thumbnail": "light_support_suports_bra.png",
       "price": 6000,
       "currency": "RS",
-      "description": "Light support dress (3D model)",
+      "description": "Light support dress ",
       "category": "Apparel",
       "isAvailable": true
     },
@@ -118,7 +118,7 @@
       "thumbnail": "flow_zip_up_jacket.png",
       "price": 12000,
       "currency": "RS",
-      "description": "Female Flow Zip Up Jacket (3D model)",
+      "description": "Female Flow Zip Up Jacket ",
       "category": "Apparel",
       "isAvailable": true
     }
