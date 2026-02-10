@@ -65,6 +65,10 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
     // QR Tracking state
     private boolean qrTrackingActive = false;
     private android.os.Handler uiHandler;
+    
+    // AR mode state
+    private boolean arModeActive = false;
+    private TextView arToggleBtn;
 
     private ServiceConnection svcConn = new ServiceConnection() {
         @Override
@@ -312,6 +316,28 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
     try { root.addView(cartIcon); } catch (Exception ignored) { }
     try { root.addView(cartBadge); } catch (Exception ignored) { }
 
+        // AR toggle button
+        arToggleBtn = new TextView(this);
+        arToggleBtn.setText("📷 AR");
+        arToggleBtn.setTextSize(14);
+        arToggleBtn.setTextColor(Color.WHITE);
+        arToggleBtn.setGravity(Gravity.CENTER);
+        arToggleBtn.setBackgroundColor(Color.argb(200, 0, 150, 80));
+        arToggleBtn.setPadding(dpToPx(14), dpToPx(8), dpToPx(14), dpToPx(8));
+        FrameLayout.LayoutParams arLp = new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT
+        );
+        arLp.gravity = Gravity.TOP | Gravity.LEFT;
+        arLp.setMargins(dpToPx(8), dpToPx(40), 0, 0);
+        arToggleBtn.setLayoutParams(arLp);
+        arToggleBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleArMode();
+            }
+        });
+        root.addView(arToggleBtn);
+
         setContentView(root);
 
     // Note: removed attaching the on-screen logger per UI changes
@@ -556,7 +582,9 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
                         @Override
                         public void run() {
                             try {
-                                String pageUrl = "file:///android_asset/model_viewer.html?model=" + localServeUrl;
+                                // Choose viewer HTML based on AR mode
+                                String viewerPage = arModeActive ? "ar_model_viewer.html" : "model_viewer.html";
+                                String pageUrl = "file:///android_asset/" + viewerPage + "?model=" + localServeUrl;
                                 InAppLogger.log("Loading URL: " + pageUrl);
                                 mWebView.clearCache(true);
                                 mWebView.loadUrl(pageUrl);
@@ -574,6 +602,31 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
                 }
             }
         }).start();
+    }
+
+    /**
+     * Toggle AR mode on/off. In AR mode the model is placed on the table
+     * surface detected via QR code tracking from the live camera feed.
+     */
+    private void toggleArMode() {
+        arModeActive = !arModeActive;
+        if (arModeActive) {
+            arToggleBtn.setText("🔲 3D");
+            arToggleBtn.setBackgroundColor(Color.argb(200, 200, 60, 30));
+            // Make camera preview visible behind model
+            mTextureView.setVisibility(View.VISIBLE);
+            // Make webview background transparent for camera passthrough
+            mWebView.setBackgroundColor(0);
+            Toast.makeText(this, "AR Mode: Point camera at QR code on table, then tap to place model", Toast.LENGTH_LONG).show();
+        } else {
+            arToggleBtn.setText("📷 AR");
+            arToggleBtn.setBackgroundColor(Color.argb(200, 0, 150, 80));
+            Toast.makeText(this, "3D Viewer Mode", Toast.LENGTH_SHORT).show();
+        }
+        // Reload current model with the correct viewer
+        if (selectedItem != null) {
+            loadProduct(selectedItem);
+        }
     }
 
     /**

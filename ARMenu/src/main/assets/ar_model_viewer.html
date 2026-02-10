@@ -1,0 +1,274 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <title>AR Model Viewer</title>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body, html {
+        height: 100%; width: 100%; margin: 0; padding: 0;
+        background: transparent; overflow: hidden;
+        user-select: none; -webkit-user-select: none;
+      }
+
+      /* ── AR placement container ────────────────────────── */
+      #ar-container {
+        position: absolute;
+        width: 200px; height: 200px;
+        transform-origin: center center;
+        transition: opacity 0.25s ease;
+        pointer-events: none;
+        opacity: 0;
+      }
+      #ar-container.visible { opacity: 1; pointer-events: auto; }
+
+      model-viewer {
+        width: 100%; height: 100%;
+        background: transparent;
+        --poster-color: transparent;
+      }
+      model-viewer::part(container) { background: transparent; }
+
+      /* ── Shadow disc beneath model ─────────────────────── */
+      #shadow-disc {
+        position: absolute;
+        bottom: -6px; left: 50%;
+        width: 80%; height: 18%;
+        transform: translateX(-50%);
+        border-radius: 50%;
+        background: radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, transparent 70%);
+        pointer-events: none;
+      }
+
+      /* ── Scanning overlay ──────────────────────────────── */
+      #scan-overlay {
+        position: absolute; inset: 0;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+      }
+      #scan-overlay.hidden { opacity: 0; }
+
+      .scan-frame {
+        width: 220px; height: 220px;
+        border: 3px solid rgba(0,255,160,0.7);
+        border-radius: 16px;
+        position: relative;
+        animation: pulse 2s infinite;
+      }
+      .scan-frame::before, .scan-frame::after {
+        content: '';
+        position: absolute;
+        width: 32px; height: 32px;
+        border-color: #00ffa0; border-style: solid;
+      }
+      .scan-frame::before { top: -2px; left: -2px; border-width: 4px 0 0 4px; border-radius: 8px 0 0 0; }
+      .scan-frame::after  { top: -2px; right: -2px; border-width: 4px 4px 0 0; border-radius: 0 8px 0 0; }
+
+      .scan-label {
+        margin-top: 18px;
+        color: #fff; font-family: sans-serif; font-size: 15px;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+        text-align: center;
+      }
+
+      @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,160,0.3); }
+        50%      { box-shadow: 0 0 0 14px rgba(0,255,160,0); }
+      }
+
+      /* ── Status pill ───────────────────────────────────── */
+      #status {
+        position: absolute; top: 12px; left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.55);
+        color: #fff; font-family: sans-serif; font-size: 13px;
+        padding: 6px 16px; border-radius: 20px;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+      #status.hidden { opacity: 0; }
+
+      /* ── Placement ring indicator ──────────────────────── */
+      #place-ring {
+        position: absolute;
+        width: 120px; height: 40px;
+        border: 2px solid rgba(0,255,160,0.6);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      #place-ring.active { opacity: 1; }
+    </style>
+  </head>
+  <body>
+
+    <!-- Scanning UI (shown when no QR detected) -->
+    <div id="scan-overlay">
+      <div class="scan-frame"></div>
+      <div class="scan-label">Point camera at QR code on table</div>
+    </div>
+
+    <!-- Placement ring (shows where model will be placed) -->
+    <div id="place-ring"></div>
+
+    <!-- AR model container (positioned by Java bridge) -->
+    <div id="ar-container">
+      <model-viewer
+        id="mv"
+        camera-controls
+        interaction-prompt="none"
+        auto-rotate
+        rotation-per-second="30deg"
+        exposure="1.2"
+        shadow-intensity="0"
+        environment-image="neutral"
+        loading="eager"
+        reveal="auto"
+        camera-orbit="0deg 60deg auto"
+        min-camera-orbit="auto 0deg auto"
+        max-camera-orbit="auto 90deg auto"
+        field-of-view="45deg"
+        style="width:100%;height:100%;"
+      ></model-viewer>
+      <div id="shadow-disc"></div>
+    </div>
+
+    <!-- Status pill -->
+    <div id="status" class="hidden"></div>
+
+    <script>
+      /* ── Elements ─────────────────────────────────────── */
+      const container   = document.getElementById('ar-container');
+      const mv          = document.getElementById('mv');
+      const scanOverlay = document.getElementById('scan-overlay');
+      const statusEl    = document.getElementById('status');
+      const placeRing   = document.getElementById('place-ring');
+
+      /* ── State ────────────────────────────────────────── */
+      let placed        = false;
+      let qrDetected    = false;
+      let qrX = 0.5, qrY = 0.5, qrSize = 0.3;
+      let smoothX = 0.5, smoothY = 0.5, smoothSize = 0.3;
+      let modelLoaded   = false;
+      const SMOOTH      = 0.25;    // lower = smoother, higher = more responsive
+
+      /* ── Load model from query string ─────────────────── */
+      function getQuery(name) {
+        return new URLSearchParams(window.location.search).get(name);
+      }
+      const modelSrc = getQuery('model');
+      if (modelSrc) {
+        mv.setAttribute('src', modelSrc);
+        mv.addEventListener('load', () => { modelLoaded = true; showStatus('Tap to place model on table'); });
+        mv.addEventListener('error', () => showStatus('Model load error'));
+      }
+
+      /* ── Status helper ────────────────────────────────── */
+      function showStatus(msg) {
+        statusEl.textContent = msg;
+        statusEl.classList.remove('hidden');
+        clearTimeout(statusEl._t);
+        statusEl._t = setTimeout(() => statusEl.classList.add('hidden'), 3000);
+      }
+
+      /* ── Called from Java: QR position update ──────────── */
+      function updateModelPosition(cx, cy, size, detected) {
+        qrX = cx; qrY = cy; qrSize = size; qrDetected = detected;
+
+        if (detected) {
+          scanOverlay.classList.add('hidden');
+
+          // Update placement ring position
+          const vw = window.innerWidth, vh = window.innerHeight;
+          placeRing.style.left = (cx * vw) + 'px';
+          placeRing.style.top  = (cy * vh) + 'px';
+          // Scale ring based on QR size
+          const ringW = Math.max(60, size * vw * 1.5);
+          const ringH = ringW * 0.35;
+          placeRing.style.width  = ringW + 'px';
+          placeRing.style.height = ringH + 'px';
+
+          if (!placed) {
+            placeRing.classList.add('active');
+          }
+        } else {
+          if (!placed) {
+            scanOverlay.classList.remove('hidden');
+            placeRing.classList.remove('active');
+          }
+        }
+      }
+
+      /* ── Animation loop: smoothly move container ──────── */
+      function animate() {
+        if (placed && qrDetected) {
+          smoothX += (qrX - smoothX) * SMOOTH;
+          smoothY += (qrY - smoothY) * SMOOTH;
+          smoothSize += (qrSize - smoothSize) * SMOOTH;
+
+          const vw = window.innerWidth, vh = window.innerHeight;
+
+          // Model size scales with QR size (how close camera is to table)
+          const modelPx = Math.max(140, Math.min(smoothSize * vw * 3.5, vw * 0.85));
+
+          container.style.width  = modelPx + 'px';
+          container.style.height = modelPx + 'px';
+          container.style.left   = (smoothX * vw - modelPx / 2) + 'px';
+          container.style.top    = (smoothY * vh - modelPx * 0.75) + 'px';  // Offset up so model sits ON the surface
+        }
+        requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+
+      /* ── Tap to place model on detected surface ────────── */
+      document.addEventListener('click', (e) => {
+        if (!modelLoaded) return;
+
+        if (!placed && qrDetected) {
+          // Place model at current QR position
+          placed = true;
+          container.classList.add('visible');
+          placeRing.classList.remove('active');
+
+          const vw = window.innerWidth, vh = window.innerHeight;
+          smoothX = qrX; smoothY = qrY; smoothSize = qrSize;
+
+          const modelPx = Math.max(140, Math.min(smoothSize * vw * 3.5, vw * 0.85));
+          container.style.width  = modelPx + 'px';
+          container.style.height = modelPx + 'px';
+          container.style.left   = (smoothX * vw - modelPx / 2) + 'px';
+          container.style.top    = (smoothY * vh - modelPx * 0.75) + 'px';
+
+          showStatus('Model placed! Rotate & zoom with fingers');
+        } else if (placed) {
+          // Second tap: re-place at current QR position
+          if (qrDetected) {
+            smoothX = qrX; smoothY = qrY; smoothSize = qrSize;
+            showStatus('Model repositioned');
+          }
+        }
+      });
+
+      /* ── Double-tap to reset placement ─────────────────── */
+      let lastTap = 0;
+      document.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTap < 300) {
+          // Double tap → reset
+          placed = false;
+          container.classList.remove('visible');
+          placeRing.classList.remove('active');
+          showStatus('Placement reset. Point at QR code again.');
+          if (!qrDetected) scanOverlay.classList.remove('hidden');
+        }
+        lastTap = now;
+      });
+    </script>
+  </body>
+</html>
