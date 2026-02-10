@@ -107,9 +107,10 @@ public class ThankYouActivity extends AppCompatActivity implements View.OnClickL
                 break;
 
             case R.id.place_another_order_btn:
-                Intent intent = new Intent(ThankYouActivity.this, UnityPlayerNativeActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                Intent intent = new Intent(ThankYouActivity.this, LaunchActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
+                finish();
                 break;
 
             case R.id.container_rl:
