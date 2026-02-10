@@ -1,9 +1,17 @@
 package com.PulsarLabs.ARMenu;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.graphics.SurfaceTexture;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.Gravity;
+import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -32,9 +40,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class RestaurantMenuActivity extends Activity {
+public class RestaurantMenuActivity extends Activity implements TextureView.SurfaceTextureListener {
 
     private WebView mWebView;
+    private TextureView mTextureView;
+    private CameraService cameraService;
+    private boolean bound = false;
+    private Surface pendingSurface = null;
     private ModelCacheManager cacheManager;
     private CartManager cartManager;
     
@@ -47,6 +59,32 @@ public class RestaurantMenuActivity extends Activity {
     private TextView priceTextView;
     private Random random = new Random();
     private MenuItem selectedItem = null;
+
+    private ServiceConnection svcConn = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            try {
+                CameraService.LocalBinder lb = (CameraService.LocalBinder) service;
+                cameraService = lb.getService();
+                bound = true;
+                if (pendingSurface != null) {
+                    cameraService.setPreviewSurface(pendingSurface);
+                } else if (mTextureView != null && mTextureView.isAvailable()) {
+                    SurfaceTexture st = mTextureView.getSurfaceTexture();
+                    if (st != null) {
+                        pendingSurface = new Surface(st);
+                        cameraService.setPreviewSurface(pendingSurface);
+                    }
+                }
+            } catch (Exception e) { }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            cameraService = null;
+            bound = false;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,14 +101,23 @@ public class RestaurantMenuActivity extends Activity {
 
         FrameLayout root = new FrameLayout(this);
 
-        // WebView for 3D model
-        mWebView = new WebView(this);
+        // Camera preview background
+        mTextureView = new TextureView(this);
         FrameLayout.LayoutParams tvLp = new FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT, 
             FrameLayout.LayoutParams.MATCH_PARENT
         );
+        mTextureView.setLayoutParams(tvLp);
+        mTextureView.setSurfaceTextureListener(this);
+
+        // WebView for 3D model (transparent so camera shows behind)
+        mWebView = new WebView(this);
         mWebView.setLayoutParams(tvLp);
-        mWebView.setBackgroundColor(Color.parseColor("#1a1a2e"));
+        try {
+            mWebView.setBackgroundColor(0);
+            mWebView.setBackgroundResource(android.R.color.transparent);
+            mWebView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null);
+        } catch (Exception e) { }
 
         WebSettings ws = mWebView.getSettings();
         ws.setJavaScriptEnabled(true);
@@ -244,6 +291,7 @@ public class RestaurantMenuActivity extends Activity {
         bottomContainer.addView(scrollView);
         bottomContainer.addView(infoOverlay);
 
+        root.addView(mTextureView);
         root.addView(mWebView);
         root.addView(restaurantNameView);
         root.addView(bottomContainer);
@@ -628,9 +676,72 @@ public class RestaurantMenuActivity extends Activity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        try {
+            if (bound) {
+                unbindService(svcConn);
+                bound = false;
+            }
+        } catch (Exception e) { }
+        try {
+            startService(new Intent(this, CameraService.class));
+            bindService(new Intent(this, CameraService.class), svcConn, Context.BIND_AUTO_CREATE);
+        } catch (Exception e) { }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (bound && cameraService != null && mTextureView != null && mTextureView.isAvailable()) {
+            try {
+                SurfaceTexture st = mTextureView.getSurfaceTexture();
+                if (st != null) {
+                    if (pendingSurface == null) {
+                        pendingSurface = new Surface(st);
+                    }
+                    cameraService.setPreviewSurface(pendingSurface);
+                }
+            } catch (Exception e) { }
+        }
+    }
+
+    @Override
     protected void onDestroy() {
+        try {
+            if (bound) {
+                try {
+                    if (cameraService != null) {
+                        cameraService.setPreviewSurface(null);
+                    }
+                } catch (Exception e) { }
+                unbindService(svcConn);
+                bound = false;
+            }
+        } catch (Exception e) { }
         super.onDestroy();
     }
+
+    @Override
+    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+        try {
+            pendingSurface = new Surface(surface);
+            if (cameraService != null && bound) {
+                cameraService.setPreviewSurface(pendingSurface);
+            }
+        } catch (Exception e) { }
+    }
+
+    @Override
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) { }
+
+    @Override
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        return true;
+    }
+
+    @Override
+    public void onSurfaceTextureUpdated(SurfaceTexture surface) { }
 
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density;
