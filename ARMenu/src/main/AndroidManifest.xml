@@ -119,6 +119,14 @@
             android:name=".QrScannerActivity"
             android:label="QR Scanner"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".RestaurantMenuActivity"
+            android:label="Restaurant Menu"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".CartActivity"
+            android:label="Shopping Cart"
+            android:screenOrientation="portrait" />
         <service android:name=".CameraService" />
         <activity
             android:name=".ReceiptActivity"
