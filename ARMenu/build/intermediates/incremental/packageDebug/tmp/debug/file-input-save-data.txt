@@ -1,5 +1,5 @@
 #Internal package file, do not edit.
-#Tue Feb 10 13:38:34 PKT 2026
+#Tue Feb 10 13:52:32 PKT 2026
 33.base=/home/mehdi/Downloads/other projects/gh/ARMenu_clean/ARMenu/build/intermediates/merged_assets/debug/mergeDebugAssets/out
 47.base=/home/mehdi/Downloads/other projects/gh/ARMenu_clean/ARMenu/build/intermediates/transforms/mergeJniLibs/debug/0
 50.base=/home/mehdi/Downloads/other projects/gh/ARMenu_clean/ARMenu/build/intermediates/merged_assets/debug/mergeDebugAssets/out

@@ -28,10 +28,13 @@ public class LaunchActivity extends Activity {
             if (cached != null) {
                 i.putExtra(KEY_CACHED_MENU, cached);
             }
+            // Ensure Relaunch clears any previous task and becomes the root
+            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(i);
         } else {
             // First run: launch QR scanner
             Intent i = new Intent(this, QrScannerActivity.class);
+            // For scanner, keep normal flow
             startActivity(i);
         }
         finish();

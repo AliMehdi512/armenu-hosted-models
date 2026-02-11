@@ -54,6 +54,7 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
     private CartManager cartManager;
     
     private String restaurantBaseUrl;
+    private String cachedMenuPath = null;
     private List<MenuItem> menuItems = new ArrayList<MenuItem>();
     private TextView cartBadge;
     private LinearLayout carouselLayout;
@@ -102,7 +103,7 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
             restaurantBaseUrl = normalizeRestaurantUrl(data.toString());
         }
 
-        // If an already-cached menu path was provided (LaunchActivity on subsequent runs), load from file
+        // If an already-cached menu path was provided (LaunchActivity on subsequent runs), remember it
         String cachedPath = null;
         try {
             cachedPath = getIntent().getStringExtra("cached_menu_path");
@@ -123,11 +124,8 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
                 }
             } catch (Exception ignored) { }
         }
-        if (cachedPath != null && !cachedPath.isEmpty()) {
-            // load menu from cached file and continue
-            loadRestaurantMenuFromFile(cachedPath);
-            return;
-        }
+        // Save cached path to field for use after UI is created and for lifecycle events
+        if (cachedPath != null && !cachedPath.isEmpty()) cachedMenuPath = cachedPath;
 
         FrameLayout root = new FrameLayout(this);
 
@@ -330,7 +328,14 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
     try { root.addView(cartIcon); } catch (Exception ignored) { }
     try { root.addView(cartBadge); } catch (Exception ignored) { }
 
+
         setContentView(root);
+
+        // After UI is initialized, if we have a cached menu path, load from file. Otherwise, proceed to remote load.
+        if (cachedMenuPath != null && !cachedMenuPath.isEmpty()) {
+            loadRestaurantMenuFromFile(cachedMenuPath);
+            return;
+        }
 
     // Note: removed attaching the on-screen logger per UI changes
 
@@ -340,7 +345,7 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
             finish();
             return;
         }
-        
+
         loadRestaurantMenu(restaurantBaseUrl);
     }
 
@@ -843,6 +848,39 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
                 }
             } catch (Exception e) { }
         }
+
+        // If we don't have any menu items loaded (e.g., activity relaunched), try loading cached menu from prefs
+        try {
+            if (menuItems == null || menuItems.size() == 0) {
+                SharedPreferences prefs = getSharedPreferences("ARMenuPrefs", MODE_PRIVATE);
+                boolean setup = prefs.getBoolean("setup_complete", false);
+                if (setup) {
+                    String cached = prefs.getString("cached_menu_path", null);
+                    if (cached != null && !cached.isEmpty()) {
+                        cachedMenuPath = cached;
+                        loadRestaurantMenuFromFile(cachedMenuPath);
+                    }
+                }
+            }
+        } catch (Exception ignored) { }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        // When receiving a new intent (launcher relaunch), ensure cached menu is loaded if setup was completed
+        try {
+            SharedPreferences prefs = getSharedPreferences("ARMenuPrefs", MODE_PRIVATE);
+            boolean setup = prefs.getBoolean("setup_complete", false);
+            if (setup && (menuItems == null || menuItems.size() == 0)) {
+                String cached = prefs.getString("cached_menu_path", null);
+                if (cached != null && !cached.isEmpty()) {
+                    cachedMenuPath = cached;
+                    loadRestaurantMenuFromFile(cachedMenuPath);
+                }
+            }
+        } catch (Exception ignored) { }
     }
 
     @Override

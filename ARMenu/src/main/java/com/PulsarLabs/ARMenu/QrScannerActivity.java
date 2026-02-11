@@ -86,6 +86,39 @@ public class QrScannerActivity extends Activity {
                                     prefs.edit().putString("restaurant_base_url", normalized).apply();
                                 } catch (Exception ignored) { }
 
+                                // Try to fetch menu.json immediately and save it to internal storage so
+                                // the app can reliably launch offline on subsequent runs.
+                                String menuJsonUrl = normalized + (normalized.endsWith("/") ? "" : "/") + "menu.json";
+                                try {
+                                    java.net.URL urlObj = new java.net.URL(menuJsonUrl);
+                                    java.net.URLConnection conn = urlObj.openConnection();
+                                    conn.setConnectTimeout(4000);
+                                    conn.setReadTimeout(4000);
+                                    java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), "UTF-8"));
+                                    StringBuilder json = new StringBuilder();
+                                    String line;
+                                    while ((line = reader.readLine()) != null) json.append(line);
+                                    reader.close();
+
+                                    // write to internal files dir
+                                    try {
+                                        String fileName = "menu_" + Integer.toHexString(normalized.hashCode()) + ".json";
+                                        java.io.File outF = new java.io.File(getFilesDir(), fileName);
+                                        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(outF)) {
+                                            fos.write(json.toString().getBytes("UTF-8"));
+                                            fos.flush();
+                                        }
+                                        try {
+                                            SharedPreferences prefs = getSharedPreferences("ARMenuPrefs", Context.MODE_PRIVATE);
+                                            prefs.edit().putString("cached_menu_path", outF.getAbsolutePath()).putBoolean("setup_complete", true).apply();
+                                        } catch (Exception ignored) { }
+                                    } catch (Exception e) {
+                                        // ignore write failures
+                                    }
+                                } catch (Exception e) {
+                                    // If fetching fails, continue - RestaurantMenuActivity will attempt to fetch itself
+                                }
+
                                 Intent i = new Intent(this, RestaurantMenuActivity.class);
                                 i.setData(Uri.parse(normalized));
                                 startActivity(i);
