@@ -702,6 +702,13 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
                 if ("local.model".equals(uri.getHost())) {
                     String name = uri.getLastPathSegment();
                     if (name != null) {
+                        // Prefer persistent filesDir cache (migrated by ModelCacheManager)
+                        File filesCache = new File(getFilesDir(), "model_cache/" + name);
+                        if (filesCache.exists()) {
+                            String mime = name.endsWith(".png") ? "image/png" : "model/gltf-binary";
+                            return new WebResourceResponse(mime, "UTF-8", new java.io.FileInputStream(filesCache));
+                        }
+                        // Fallback to legacy cacheDir
                         File cacheFile = new File(getCacheDir(), "model_cache/" + name);
                         if (cacheFile.exists()) {
                             String mime = name.endsWith(".png") ? "image/png" : "model/gltf-binary";
@@ -723,6 +730,11 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
                 if ("local.model".equals(uri.getHost())) {
                     String name = uri.getLastPathSegment();
                     if (name != null) {
+                        File filesCache = new File(getFilesDir(), "model_cache/" + name);
+                        if (filesCache.exists()) {
+                            String mime = name.endsWith(".png") ? "image/png" : "model/gltf-binary";
+                            return new WebResourceResponse(mime, "UTF-8", new java.io.FileInputStream(filesCache));
+                        }
                         File cacheFile = new File(getCacheDir(), "model_cache/" + name);
                         if (cacheFile.exists()) {
                             String mime = name.endsWith(".png") ? "image/png" : "model/gltf-binary";
