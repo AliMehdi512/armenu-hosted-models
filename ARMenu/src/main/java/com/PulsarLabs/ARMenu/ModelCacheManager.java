@@ -41,11 +41,32 @@ public class ModelCacheManager {
             try {
                 String hash = hashUrl(url);
                 String ext = getExtension(url);
-                File cacheDir = new File(context.getCacheDir(), CACHE_DIR);
-                if (!cacheDir.exists()) {
-                    cacheDir.mkdirs();
+
+                // Prefer persistent filesDir for cache so OS won't purge on low storage.
+                File filesCacheDir = new File(context.getFilesDir(), CACHE_DIR);
+                if (!filesCacheDir.exists()) filesCacheDir.mkdirs();
+                File cachedFile = new File(filesCacheDir, hash + "." + ext);
+
+                // If not present in filesDir, check legacy cacheDir and migrate if found
+                if (!(cachedFile.exists() && cachedFile.length() > 0)) {
+                    File legacyCacheDir = new File(context.getCacheDir(), CACHE_DIR);
+                    File legacyFile = new File(legacyCacheDir, hash + "." + ext);
+                    if (legacyFile.exists() && legacyFile.length() > 0) {
+                        try {
+                            // copy legacy -> filesDir
+                            try (java.io.FileInputStream in = new java.io.FileInputStream(legacyFile);
+                                 java.io.FileOutputStream out = new java.io.FileOutputStream(cachedFile)) {
+                                byte[] buf = new byte[8192];
+                                int r;
+                                while ((r = in.read(buf)) != -1) out.write(buf, 0, r);
+                                out.flush();
+                            }
+                            android.util.Log.d("ModelCache", "Migrated cache to filesDir: " + cachedFile.getAbsolutePath());
+                        } catch (Exception e) {
+                            android.util.Log.w("ModelCache", "Migration failed for: " + legacyFile.getAbsolutePath(), e);
+                        }
+                    }
                 }
-                File cachedFile = new File(cacheDir, hash + "." + ext);
 
                 if (cachedFile.exists() && cachedFile.length() > 0) {
                     android.util.Log.d("ModelCache", "Using cached: " + url);
