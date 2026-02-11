@@ -35,6 +35,9 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import android.content.SharedPreferences;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -97,6 +100,33 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
         Uri data = getIntent().getData();
         if (data != null) {
             restaurantBaseUrl = normalizeRestaurantUrl(data.toString());
+        }
+
+        // If an already-cached menu path was provided (LaunchActivity on subsequent runs), load from file
+        String cachedPath = null;
+        try {
+            cachedPath = getIntent().getStringExtra("cached_menu_path");
+        } catch (Exception ignored) { }
+        if ((cachedPath == null || cachedPath.isEmpty())) {
+            // also check prefs for cached menu (in case QrScanner saved base URL earlier)
+            try {
+                SharedPreferences prefs = getSharedPreferences("ARMenuPrefs", MODE_PRIVATE);
+                String prefCache = prefs.getString("cached_menu_path", null);
+                if (prefCache != null && !prefCache.isEmpty()) {
+                    cachedPath = prefCache;
+                }
+                if ((restaurantBaseUrl == null || restaurantBaseUrl.isEmpty())) {
+                    String prefBase = prefs.getString("restaurant_base_url", null);
+                    if (prefBase != null && !prefBase.isEmpty()) {
+                        restaurantBaseUrl = prefBase;
+                    }
+                }
+            } catch (Exception ignored) { }
+        }
+        if (cachedPath != null && !cachedPath.isEmpty()) {
+            // load menu from cached file and continue
+            loadRestaurantMenuFromFile(cachedPath);
+            return;
         }
 
         FrameLayout root = new FrameLayout(this);
@@ -346,6 +376,22 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
                     }
                     reader.close();
 
+                    // Save fetched menu.json to internal storage for offline/cached startup
+                    try {
+                        String menuFileName = "menu_" + Integer.toHexString(baseUrl.hashCode()) + ".json";
+                        File menuFile = new File(getFilesDir(), menuFileName);
+                        try (FileOutputStream fos = new FileOutputStream(menuFile)) {
+                            fos.write(json.toString().getBytes("UTF-8"));
+                            fos.flush();
+                        }
+                        try {
+                            SharedPreferences prefs = getSharedPreferences("ARMenuPrefs", MODE_PRIVATE);
+                            prefs.edit().putString("cached_menu_path", menuFile.getAbsolutePath()).putString("restaurant_base_url", baseUrl).putBoolean("setup_complete", true).apply();
+                        } catch (Exception ignored) { }
+                    } catch (Exception e) {
+                        // ignore cache-write failures
+                    }
+
                     android.util.Log.d("RestaurantMenu", "Menu JSON loaded: " + json.toString().substring(0, Math.min(100, json.length())));
                     InAppLogger.log("Menu loaded OK");
                     
@@ -426,6 +472,87 @@ public class RestaurantMenuActivity extends Activity implements TextureView.Surf
                 }
             }).start();
         } catch (Exception e) { }
+    }
+
+    /**
+     * Load a previously cached menu.json saved to internal storage.
+     */
+    private void loadRestaurantMenuFromFile(final String filePath) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    File f = new File(filePath);
+                    if (!f.exists()) {
+                        // fallback to remote if file missing
+                        if (restaurantBaseUrl != null && !restaurantBaseUrl.isEmpty()) {
+                            loadRestaurantMenu(restaurantBaseUrl);
+                        }
+                        return;
+                    }
+                    StringBuilder json = new StringBuilder();
+                    try (FileInputStream fis = new FileInputStream(f);
+                         java.io.InputStreamReader isr = new java.io.InputStreamReader(fis, "UTF-8");
+                         BufferedReader reader = new BufferedReader(isr)) {
+                        String line;
+                        while ((line = reader.readLine()) != null) json.append(line);
+                    }
+
+                    JSONObject menuObj = new JSONObject(json.toString());
+                    final String restName = menuObj.optString("restaurantName", "Menu");
+                    JSONArray products = menuObj.optJSONArray("products");
+
+                    menuItems.clear();
+                    if (products != null) {
+                        for (int i = 0; i < products.length(); i++) {
+                            JSONObject prod = products.getJSONObject(i);
+                            MenuItem mi = MenuItem.fromJson(prod);
+                            if (mi == null) {
+                                String id = prod.optString("id", "");
+                                String name = prod.optString("name", "");
+                                String model = prod.optString("model", "");
+                                String thumbnail = prod.optString("thumbnail", "");
+                                mi = new MenuItem(id, name, model, thumbnail);
+                            }
+                            menuItems.add(mi);
+                        }
+                    }
+
+                    // Ensure restaurantBaseUrl is set (may be in prefs)
+                    try {
+                        SharedPreferences prefs = getSharedPreferences("ARMenuPrefs", MODE_PRIVATE);
+                        if (restaurantBaseUrl == null || restaurantBaseUrl.isEmpty()) {
+                            String prefBase = prefs.getString("restaurant_base_url", null);
+                            if (prefBase != null && !prefBase.isEmpty()) restaurantBaseUrl = prefBase;
+                        }
+                        prefs.edit().putBoolean("setup_complete", true).apply();
+                    } catch (Exception ignored) { }
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            restaurantNameView.setText(restName);
+                            buildCarousel();
+                            if (menuItems.size() > 0) {
+                                selectedItem = menuItems.get(0);
+                                updatePriceAndRating(selectedItem);
+                                loadProduct(selectedItem);
+                            }
+                        }
+                    });
+
+                    // Prefetch assets to cache (models/thumbnails)
+                    prefetchAllAssets();
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    // fallback to remote if anything goes wrong
+                    if (restaurantBaseUrl != null && !restaurantBaseUrl.isEmpty()) {
+                        loadRestaurantMenu(restaurantBaseUrl);
+                    }
+                }
+            }
+        }).start();
     }
 
     private void buildCarousel() {

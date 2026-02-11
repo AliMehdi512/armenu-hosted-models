@@ -1,7 +1,9 @@
 package com.PulsarLabs.ARMenu;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.Manifest;
@@ -77,8 +79,14 @@ public class QrScannerActivity extends Activity {
                     } else if (contents.startsWith("http://") || contents.startsWith("https://")) {
                         try {
                             if (contents.contains("/restaurants/") || contents.endsWith("/menu.json") || contents.contains("/menu.json")) {
-                                Intent i = new Intent(this, RestaurantMenuActivity.class);
+                                // Save the scanned restaurant base URL so we can skip scanning on next app start
                                 String normalized = normalizeRestaurantUrl(contents);
+                                try {
+                                    SharedPreferences prefs = getSharedPreferences("ARMenuPrefs", Context.MODE_PRIVATE);
+                                    prefs.edit().putString("restaurant_base_url", normalized).apply();
+                                } catch (Exception ignored) { }
+
+                                Intent i = new Intent(this, RestaurantMenuActivity.class);
                                 i.setData(Uri.parse(normalized));
                                 startActivity(i);
                             } else {
